@@ -1,0 +1,492 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Lantern Hollow</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Nunito:wght@500;700;800&display=swap">
+<style>
+/* Layout: one painted 4:3 stage. The wanderer and title sit on the left third; the great tree and the light shafts pull the eye to the right third; the path leads across both. */
+:root{
+  --ink:#173229; --ink-2:#2a4f42; --moss:#5f8f4a; --leaf:#a9d17a; --glow:#ffd36e;
+  --paper:#fbf3d9; --paper-ink:#34301f; --bg:#10211b; --mist:#e9f1dc;
+  --font-display:'Caveat Brush','Segoe Print','Bradley Hand',cursive;
+  --font-body:'Nunito',ui-rounded,system-ui,sans-serif;
+  color-scheme:dark;
+}
+body{background:var(--bg);color:var(--mist);font-family:var(--font-body);padding-inline:16px;padding-block:16px 28px}
+.wrap{max-width:960px;margin-inline:auto;display:flex;flex-direction:column;align-items:center;gap:12px}
+.stage{position:relative;width:min(100%,max(320px,calc((100svh - 96px)*1.3333)));aspect-ratio:4/3;min-width:0;border-radius:18px;overflow:hidden;background:#cfe3b5;box-shadow:0 22px 50px -22px rgba(0,0,0,.75),0 0 0 2px rgba(255,255,255,.06)}
+.scene{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:manipulation;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.note{margin:0;max-width:62ch;text-align:center;font-size:13px;line-height:1.5;color:#a9c0a4}
+
+/* overlays */
+.ui{position:absolute;inset:0;pointer-events:none}
+.ui>*{position:absolute;pointer-events:auto}
+.title-screen{inset:0;display:flex;flex-direction:column;align-items:flex-start;padding:clamp(12px,3.5vw,36px);background:linear-gradient(180deg,rgba(14,38,32,.55),rgba(14,38,32,0) 58%);pointer-events:none}
+.title-screen>*{pointer-events:auto}
+.eyebrow{font-size:clamp(9px,1.7vw,13px);letter-spacing:.18em;text-transform:uppercase;font-weight:800;color:#ffe9a8;text-shadow:0 1px 8px rgba(14,38,32,.8)}
+h1{font-family:var(--font-display);font-weight:400;font-size:clamp(34px,8.2vw,88px);line-height:.95;margin:.08em 0 0;color:#fff8de;text-shadow:0 2px 0 rgba(23,50,41,.55),0 6px 24px rgba(23,50,41,.5);text-wrap:balance}
+.menu{display:flex;flex-wrap:wrap;gap:clamp(6px,1.4vw,12px);margin-top:clamp(8px,2vw,18px)}
+.btn{font:800 clamp(12px,2.2vw,17px)/1 var(--font-body);padding:.7em 1.2em;border-radius:999px;border:2px solid var(--ink-2);background:var(--paper);color:var(--paper-ink);box-shadow:0 3px 0 var(--ink-2);cursor:pointer;transition:transform .12s,box-shadow .12s,background .2s}
+.btn:hover{background:#fff9e8}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink-2)}
+.btn:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.btn.primary{background:var(--glow)}
+.btn[aria-pressed="true"]{background:var(--leaf)}
+.btn.small{font-size:clamp(11px,1.8vw,14px);padding:.6em 1em}
+
+.hud{inset:clamp(8px,2vw,16px) clamp(8px,2vw,16px) auto;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;pointer-events:none}
+.hud>*{pointer-events:auto}
+.pips{display:flex;align-items:center;gap:6px;padding:.5em .9em;border-radius:999px;background:rgba(251,243,217,.9);border:2px solid var(--ink-2);color:var(--paper-ink);font-weight:800;font-size:clamp(11px,1.8vw,14px)}
+.pip{width:15px;height:15px;border-radius:2px 13px 2px 13px;background:rgba(23,50,41,.18);border:1.5px solid var(--ink-2);transition:background .4s,box-shadow .4s}
+.pip.on{background:var(--moss);box-shadow:0 0 9px var(--glow)}
+.hud-btns{display:flex;gap:6px;flex-wrap:wrap}
+.hint{left:50%;bottom:clamp(8px,2vw,16px);transform:translateX(-50%);width:max-content;max-width:calc(100% - 24px);text-align:center;font-weight:700;font-size:clamp(11px,1.9vw,15px);line-height:1.35;padding:.5em 1em;border-radius:999px;background:rgba(20,40,33,.74);color:#fff3cf;pointer-events:none!important}
+.card{inset:auto auto clamp(8px,3vw,28px) 50%;transform:translateX(-50%);width:min(94%,560px);background:var(--paper);color:var(--paper-ink);border:2px solid var(--ink-2);border-radius:16px;padding:clamp(12px,2.4vw,20px);box-shadow:0 6px 0 var(--ink-2),0 20px 40px rgba(0,0,0,.35);animation:rise .35s ease-out}
+.kicker{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:800;color:#6b6a3a}
+.card h2,.panel h2{font-family:var(--font-display);font-weight:400;font-size:clamp(22px,4.2vw,34px);line-height:1.05;margin:.12em 0 .25em}
+.card p,.panel p{margin:0 0 .8em;font-size:clamp(13px,2.2vw,17px);line-height:1.5;max-width:60ch}
+.modal{inset:0;display:grid;place-items:center;padding:12px;background:rgba(14,38,32,.58)}
+.panel{width:min(100%,460px);max-height:100%;overflow:auto;background:var(--paper);color:var(--paper-ink);border:2px solid var(--ink-2);border-radius:16px;padding:clamp(14px,3vw,24px);box-shadow:0 6px 0 var(--ink-2),0 24px 50px rgba(0,0,0,.4)}
+.opt{display:flex;align-items:center;gap:12px;padding:.55em 0;font-weight:700;font-size:clamp(14px,2.4vw,17px);cursor:pointer}
+.opt input{width:22px;height:22px;accent-color:var(--moss);flex:none}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 .9em;padding:0;list-style:none}
+.chips li{padding:.3em .8em;border-radius:999px;background:#e5ecc2;border:1.5px solid var(--ink-2);font-weight:800;font-size:clamp(11px,1.9vw,14px)}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.done-screen .panel{text-align:left}
+
+/* scene motion */
+.cloud{animation:drift 50s ease-in-out infinite alternate}
+.cloud.c2{animation-duration:70s;animation-direction:alternate-reverse}
+.cloud.c3{animation-duration:60s}
+.rays{animation:rays 9s ease-in-out infinite alternate}
+.bloom-glow,.spot .ring{transform-box:fill-box;transform-origin:center}
+.bloom-glow{animation:pulse 3.2s ease-in-out infinite}
+.rip{stroke-dasharray:12 14;animation:flow 3s linear infinite}
+.ff{animation:ff var(--d,9s) ease-in-out var(--delay,0s) infinite;transform-box:fill-box}
+.spot{opacity:0;pointer-events:none;transition:opacity .6s}
+.explore .spot{opacity:1;pointer-events:auto;cursor:pointer}
+.spot .ring{animation:ring 2.2s ease-out infinite}
+.spot .tick{opacity:0}
+.spot.found .tick{opacity:1}
+.spot.found .core{fill:#a9d17a;stroke:#5f8f4a}
+.spot.found .ring{animation:none;opacity:.35}
+.spot:focus{outline:none}
+.spot:focus-visible .hit{stroke:#fff;stroke-width:3;stroke-dasharray:6 5}
+.deco{pointer-events:none}
+@keyframes drift{from{transform:translateX(-30px)}to{transform:translateX(40px)}}
+@keyframes rays{from{opacity:.55}to{opacity:1}}
+@keyframes pulse{0%,100%{transform:scale(.92);opacity:.75}50%{transform:scale(1.08);opacity:1}}
+@keyframes ring{0%{transform:scale(.6);opacity:.95}100%{transform:scale(1.4);opacity:0}}
+@keyframes rise{from{opacity:0;transform:translate(-50%,14px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes flow{to{stroke-dashoffset:-52}}
+@keyframes ff{0%,100%{transform:translate(0,0);opacity:0}20%{opacity:.95}50%{transform:translate(var(--dx,20px),var(--dy,-30px));opacity:.55}80%{opacity:.95}}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  .ff{animation:none;opacity:.7}
+}
+</style>
+<main class="wrap">
+<div class="stage" id="stage">
+<svg id="scene" class="scene" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice" role="img" aria-label="A sunlit forest with a river, an ancient tree and a glowing flower. A small wanderer with a lantern stands on the path.">
+<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#79b8bf"/><stop offset=".5" stop-color="#c9e2b8"/><stop offset="1" stop-color="#f7e8a9"/></linearGradient>
+  <radialGradient id="sun"><stop offset="0" stop-color="#fffbe0"/><stop offset=".35" stop-color="#fff0b0" stop-opacity=".55"/><stop offset="1" stop-color="#fff0b0" stop-opacity="0"/></radialGradient>
+  <radialGradient id="glow"><stop offset="0" stop-color="#fff1b0" stop-opacity=".95"/><stop offset=".4" stop-color="#ffd36e" stop-opacity=".45"/><stop offset="1" stop-color="#ffd36e" stop-opacity="0"/></radialGradient>
+  <radialGradient id="ffGrad"><stop offset="0" stop-color="#fffbd0"/><stop offset=".4" stop-color="#ffe98a" stop-opacity=".7"/><stop offset="1" stop-color="#ffe98a" stop-opacity="0"/></radialGradient>
+  <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#93c15f"/><stop offset=".5" stop-color="#6fa24f"/><stop offset="1" stop-color="#3f7b42"/></linearGradient>
+  <linearGradient id="water" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b6e1d8"/><stop offset="1" stop-color="#5fb0b8"/></linearGradient>
+  <radialGradient id="vig" cx=".5" cy=".45" r=".78"><stop offset=".6" stop-color="#0b2018" stop-opacity="0"/><stop offset="1" stop-color="#0b2018" stop-opacity=".55"/></radialGradient>
+  <filter id="paint" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="9" xChannelSelector="R" yChannelSelector="G"/></filter>
+  <filter id="soft" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+  <filter id="grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="9"/><feColorMatrix values="0 0 0 0 .1  0 0 0 0 .12  0 0 0 0 .08  0 0 0 .6 -.15"/></filter>
+</defs>
+
+<g class="deco">
+  <rect width="800" height="600" fill="url(#sky)"/>
+  <circle cx="610" cy="95" r="270" fill="url(#sun)"/>
+  <g filter="url(#soft)" opacity=".8">
+    <g class="cloud"><ellipse cx="160" cy="105" rx="90" ry="20" fill="#fff8e6"/><ellipse cx="215" cy="92" rx="58" ry="20" fill="#fff8e6"/><ellipse cx="118" cy="114" rx="58" ry="14" fill="#fdf0cf"/></g>
+    <g class="cloud c2"><ellipse cx="430" cy="58" rx="80" ry="14" fill="#fff8e6"/><ellipse cx="480" cy="50" rx="46" ry="14" fill="#fff8e6"/></g>
+    <g class="cloud c3"><ellipse cx="730" cy="170" rx="70" ry="12" fill="#fff8e6"/><ellipse cx="690" cy="176" rx="46" ry="10" fill="#fdf0cf"/></g>
+  </g>
+  <g class="rays" style="mix-blend-mode:screen">
+    <polygon points="545,0 615,0 420,430 300,430" fill="#fff6c8" opacity=".18"/>
+    <polygon points="640,0 690,0 600,430 520,430" fill="#fff6c8" opacity=".14"/>
+    <polygon points="500,0 530,0 300,430 250,430" fill="#fff6c8" opacity=".1"/>
+  </g>
+  <g filter="url(#paint)">
+    <path d="M-10 290 C110 235 220 275 330 250 C450 225 560 270 680 240 C740 225 780 235 810 245 L810 420 L-10 420Z" fill="#98c5a8"/>
+  </g>
+  <g id="treesFar" filter="url(#paint)"></g>
+  <g filter="url(#paint)">
+    <path d="M-10 345 C130 300 250 335 380 312 C520 288 640 330 810 296 L810 420 L-10 420Z" fill="#77ad88"/>
+  </g>
+  <g id="treesMid" filter="url(#paint)"></g>
+  <path d="M-10 380 C100 366 220 392 340 378 C460 364 560 390 680 376 C740 370 780 374 810 372 L810 610 L-10 610Z" fill="url(#grass)"/>
+  <path d="M-10 478 C150 458 300 480 450 466 C600 452 700 470 810 456 L810 520 C700 534 600 518 450 530 C300 542 150 526 -10 540Z" fill="#dcc88f" stroke="#b59b5e" stroke-width="2.5" stroke-linejoin="round"/>
+  <g id="river">
+    <path d="M398 322 C412 372 384 430 406 482 C426 530 376 564 352 600 L548 600 C540 566 508 530 492 484 C474 430 462 372 436 322Z" fill="url(#water)" stroke="#3d7c82" stroke-width="2.5" stroke-linejoin="round"/>
+    <path class="rip" d="M412 376 q14 -7 28 0" fill="none" stroke="#f2fffb" stroke-width="2.5" stroke-linecap="round" opacity=".8"/>
+    <path class="rip" d="M418 430 q16 -8 34 0" fill="none" stroke="#f2fffb" stroke-width="2.5" stroke-linecap="round" opacity=".7" style="animation-delay:-1s"/>
+    <path class="rip" d="M404 560 q22 -9 46 0" fill="none" stroke="#f2fffb" stroke-width="2.5" stroke-linecap="round" opacity=".8" style="animation-delay:-2s"/>
+    <path class="rip" d="M440 568 q18 -8 38 0" fill="none" stroke="#f2fffb" stroke-width="2.5" stroke-linecap="round" opacity=".6" style="animation-delay:-.5s"/>
+    <g fill="#8d9b86" stroke="#4a5a4b" stroke-width="2"><ellipse cx="396" cy="446" rx="9" ry="5"/><ellipse cx="500" cy="446" rx="10" ry="5"/><ellipse cx="381" cy="546" rx="12" ry="6"/><ellipse cx="520" cy="552" rx="12" ry="6"/></g>
+  </g>
+  <g id="bridge" stroke-linejoin="round">
+    <path d="M366 502 Q445 462 524 502 L524 522 Q445 484 366 522Z" fill="#b58545" stroke="#5e3f1e" stroke-width="2.5"/>
+    <path d="M392 494 v22 M418 486 v22 M445 483 v22 M472 486 v22 M498 494 v22" stroke="#7a5428" stroke-width="2" fill="none"/>
+  </g>
+  <g id="grassBack"></g>
+  <g id="ancient">
+    <path d="M585 492 C600 470 604 430 606 380 C608 335 596 300 590 250 L694 250 C686 300 672 335 674 380 C676 430 682 470 704 492 C680 500 610 500 585 492Z" fill="#6b5842" stroke="#3a2f23" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M616 300 C620 350 616 420 626 470 M664 290 C660 340 666 410 676 470" stroke="#8d7556" stroke-width="5" fill="none" stroke-linecap="round" opacity=".55"/>
+    <path d="M628 472 C626 440 633 418 646 418 C659 418 664 442 662 472Z" fill="#ffd98a" stroke="#3a2f23" stroke-width="2.5" stroke-linejoin="round"/>
+    <circle cx="645" cy="448" r="46" fill="url(#glow)" opacity=".7"/>
+    <g filter="url(#paint)">
+      <circle cx="640" cy="215" r="112" fill="#2f6b4c"/><circle cx="560" cy="232" r="86" fill="#3a7d55"/><circle cx="724" cy="226" r="92" fill="#3a7d55"/>
+      <circle cx="640" cy="150" r="96" fill="#4c9060"/><circle cx="558" cy="172" r="62" fill="#4c9060"/><circle cx="726" cy="160" r="66" fill="#5aa066"/>
+      <circle cx="640" cy="100" r="62" fill="#6aaa6c"/><circle cx="696" cy="116" r="54" fill="#86bd72"/><circle cx="706" cy="86" r="38" fill="#b3d985"/><circle cx="650" cy="70" r="32" fill="#a5d27c"/>
+    </g>
+  </g>
+  <g id="flowerGroup" transform="translate(150 455)">
+    <circle class="bloom-glow" cx="0" cy="-72" r="72" fill="url(#glow)"/>
+    <path d="M0 0 C-4 -25 4 -45 0 -68" stroke="#2f5a2e" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <path d="M0 0 C-4 -25 4 -45 0 -68" stroke="#4f8d43" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    <path d="M0 -20 C-22 -30 -30 -18 -34 -8 C-18 -8 -8 -12 0 -20Z" fill="#5f9a4a" stroke="#2f5a2e" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M0 -34 C20 -46 30 -34 34 -26 C18 -24 8 -26 0 -34Z" fill="#5f9a4a" stroke="#2f5a2e" stroke-width="2" stroke-linejoin="round"/>
+    <g transform="translate(0 -72)" fill="#ffd36e" stroke="#d98a2b" stroke-width="2">
+      <ellipse cy="-14" rx="8" ry="16"/><ellipse cy="-14" rx="8" ry="16" transform="rotate(60)"/><ellipse cy="-14" rx="8" ry="16" transform="rotate(120)"/><ellipse cy="-14" rx="8" ry="16" transform="rotate(180)"/><ellipse cy="-14" rx="8" ry="16" transform="rotate(240)"/><ellipse cy="-14" rx="8" ry="16" transform="rotate(300)"/>
+      <circle r="8" fill="#fff6c8"/>
+    </g>
+  </g>
+  <g id="grassFront"></g>
+</g>
+
+<g id="spots">
+  <g class="spot" data-id="flower" transform="translate(150 383)" role="button" tabindex="-1" aria-label="Look closely at the glowing flower"><circle class="hit" r="46" fill="transparent"/><circle class="ring" r="30" fill="none" stroke="#fff3b0" stroke-width="3"/><circle class="core" r="12" fill="#fff3b0" stroke="#ffd36e" stroke-width="3"/><path class="tick" d="M-5 0 L-1 4 L6 -4" fill="none" stroke="#2f5a2e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></g>
+  <g class="spot" data-id="river" transform="translate(445 440)" role="button" tabindex="-1" aria-label="Look closely at the river"><circle class="hit" r="46" fill="transparent"/><circle class="ring" r="30" fill="none" stroke="#fff3b0" stroke-width="3"/><circle class="core" r="12" fill="#fff3b0" stroke="#ffd36e" stroke-width="3"/><path class="tick" d="M-5 0 L-1 4 L6 -4" fill="none" stroke="#2f5a2e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></g>
+  <g class="spot" data-id="tree" transform="translate(645 395)" role="button" tabindex="-1" aria-label="Look closely at the ancient tree"><circle class="hit" r="46" fill="transparent"/><circle class="ring" r="30" fill="none" stroke="#fff3b0" stroke-width="3"/><circle class="core" r="12" fill="#fff3b0" stroke="#ffd36e" stroke-width="3"/><path class="tick" d="M-5 0 L-1 4 L6 -4" fill="none" stroke="#2f5a2e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></g>
+</g>
+
+<g id="hero" class="deco" transform="translate(300 502)">
+  <ellipse cx="0" cy="2" rx="24" ry="6" fill="#0b2018" opacity=".28"/>
+  <g transform="translate(-7 -24)"><g id="legL"><rect x="-4" y="0" width="8" height="22" rx="4" fill="#4a3426" stroke="#2c1e15" stroke-width="2"/><ellipse cx="2" cy="23" rx="8" ry="4" fill="#f2efe0" stroke="#2c1e15" stroke-width="2"/></g></g>
+  <g transform="translate(7 -24)"><g id="legR"><rect x="-4" y="0" width="8" height="22" rx="4" fill="#4a3426" stroke="#2c1e15" stroke-width="2"/><ellipse cx="2" cy="23" rx="8" ry="4" fill="#f2efe0" stroke="#2c1e15" stroke-width="2"/></g></g>
+  <path d="M-17 -22 C-19 -38 -14 -54 -9 -58 L11 -58 C16 -54 20 -38 18 -22 C8 -18 -8 -18 -17 -22Z" fill="#e0705a" stroke="#6b2f24" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M-10 -50 C-18 -46 -20 -38 -17 -32 L-11 -34 C-12 -40 -10 -45 -6 -48Z" fill="#fff3cf" stroke="#6b2f24" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M-12 -57 C-4 -50 6 -50 14 -57 L15 -52 C6 -44 -4 -44 -12 -51Z" fill="#fff3cf" stroke="#6b2f24" stroke-width="2" stroke-linejoin="round"/>
+  <circle cx="0" cy="-70" r="15" fill="#f4cfae" stroke="#4a3426" stroke-width="2.5"/>
+  <path d="M-16 -70 C-18 -86 -2 -90 8 -87 C18 -84 18 -74 15 -70 C12 -76 2 -78 -6 -75 C-10 -73 -14 -70 -16 -70Z" fill="#4a3426"/>
+  <path d="M-14 -84 C-8 -104 16 -106 30 -96 C20 -86 0 -80 -14 -84Z" fill="#8ec06c" stroke="#3f6b3a" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M-8 -86 C4 -94 16 -97 26 -97" stroke="#3f6b3a" stroke-width="1.6" fill="none"/>
+  <circle cx="6" cy="-69" r="1.9" fill="#2a1c12"/><circle cx="12" cy="-69" r="1.9" fill="#2a1c12"/>
+  <ellipse cx="9" cy="-63" rx="3" ry="1.8" fill="#f09a86" opacity=".7"/>
+  <path d="M9 -50 C16 -47 22 -44 26 -42" stroke="#e0705a" stroke-width="7" stroke-linecap="round" fill="none"/>
+  <g transform="translate(27 -24)">
+    <circle id="lanternGlow" cx="0" cy="-2" r="32" fill="url(#glow)"/>
+    <path d="M0 -18 V-12" stroke="#6b4b1f" stroke-width="2"/>
+    <rect x="-5" y="-12" width="10" height="3" rx="1.5" fill="#6b4b1f"/>
+    <rect x="-6" y="-9" width="12" height="15" rx="3" fill="#ffe08a" stroke="#6b4b1f" stroke-width="2"/>
+  </g>
+</g>
+
+<g id="flies" class="deco"></g>
+<g class="rays deco" style="mix-blend-mode:screen"><polygon points="560,0 640,0 520,600 380,600" fill="#fff6c8" opacity=".07"/></g>
+<rect class="deco" width="800" height="600" fill="url(#vig)"/>
+<rect class="deco" width="800" height="600" filter="url(#grain)" opacity=".3" style="mix-blend-mode:multiply"/>
+</svg>
+
+<div class="ui" id="ui">
+  <section class="title-screen" id="titleScreen" aria-label="Title screen">
+    <span class="eyebrow">A small forest adventure</span>
+    <h1>Lantern Hollow</h1>
+    <div class="menu">
+      <button class="btn primary" id="btnPlay" type="button">Play</button>
+      <button class="btn" id="btnExploreTitle" type="button">Explore</button>
+      <button class="btn" id="btnSettingsTitle" type="button">Settings</button>
+    </div>
+  </section>
+
+  <div class="hud" id="hud" hidden>
+    <div class="pips" id="pips" role="status" aria-label="Secrets found"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span id="pipText">0 of 3</span></div>
+    <div class="hud-btns">
+      <button class="btn small" id="btnExplore" type="button" aria-pressed="false">Explore</button>
+      <button class="btn small" id="btnSettings" type="button">Settings</button>
+      <button class="btn small" id="btnMenu" type="button">Menu</button>
+    </div>
+  </div>
+
+  <p class="hint" id="hint" hidden aria-live="polite"></p>
+
+  <article class="card" id="card" hidden aria-live="polite">
+    <span class="kicker" id="cardKicker"></span>
+    <h2 id="cardTitle"></h2>
+    <p id="cardText"></p>
+    <button class="btn primary small" id="btnContinue" type="button">Continue</button>
+  </article>
+
+  <div class="modal" id="settings" hidden role="dialog" aria-modal="true" aria-labelledby="setTitle">
+    <div class="panel">
+      <h2 id="setTitle">Settings</h2>
+      <label class="opt" for="optSound"><input type="checkbox" id="optSound">Ambient sound and chimes</label>
+      <label class="opt" for="optFlies"><input type="checkbox" id="optFlies">Fireflies</label>
+      <div class="row"><button class="btn primary small" id="btnCloseSettings" type="button">Done</button></div>
+    </div>
+  </div>
+
+  <div class="modal done-screen" id="done" hidden role="dialog" aria-modal="true" aria-labelledby="doneTitle">
+    <div class="panel">
+      <span class="kicker">Adventure complete</span>
+      <h2 id="doneTitle">The forest remembers you</h2>
+      <ul class="chips"><li>The Lantern Bloom</li><li>The Whispering River</li><li>The Old Keeper</li></ul>
+      <p>You found all three secrets: a light that guides, water that connects, and roots that hold. Nature does this quietly every day. Looking after it is how we thank it.</p>
+      <div class="row">
+        <button class="btn primary small" id="btnAgain" type="button">Wander again</button>
+        <button class="btn small" id="btnHome" type="button">Back to title</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<p class="note">Walk with the arrow keys or A and D, or tap the ground. Press Explore to sense what the forest is hiding. All the artwork is drawn in code.</p>
+</main>
+<script>
+(() => {
+  const NS = 'http://www.w3.org/2000/svg';
+  const $ = s => document.querySelector(s);
+  const svg = $('#scene'), stage = $('#stage');
+  const el = (n, a, p) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; };
+  const rng = seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  const R = rng(7);
+  const pick = a => a[Math.floor(R() * a.length)];
+
+  /* ---------- painted scenery, generated once ---------- */
+  function trees(g, y0, step, rmin, rmax, cols, skip, trunk) {
+    for (let x = -20; x < 830; x += step * (0.8 + R() * 0.4)) {
+      if (skip && skip(x)) continue;
+      const r = rmin + R() * (rmax - rmin), cy = y0 + R() * 14;
+      if (trunk) el('rect', { x: x - 3, y: cy, width: 6, height: 52, rx: 3, fill: trunk }, g);
+      for (let i = 0; i < 5; i++) el('circle', { cx: x + (R() - .5) * r * 1.1, cy: cy + (R() - .5) * r * .7, r: r * (.55 + R() * .35), fill: pick(cols) }, g);
+    }
+  }
+  trees($('#treesFar'), 300, 46, 24, 40, ['#7fb392', '#8cbf9b', '#6fa688']);
+  trees($('#treesMid'), 350, 64, 34, 54, ['#3f7d5a', '#4b8b61', '#5a9a67', '#356f50'], x => x > 380 && x < 510, '#2f4d3a');
+
+  function tufts(g, n, y1, y2, h1, h2, cols, w) {
+    for (let i = 0; i < n; i++) {
+      const x = R() * 800, y = y1 + R() * (y2 - y1), h = h1 + R() * (h2 - h1);
+      for (let b = -1; b <= 1; b++) {
+        const bx = x + b * 4, lean = (R() - .5) * 16 + b * 5;
+        el('path', { d: `M${bx} ${y} q${lean * .3} ${-h * .55} ${lean} ${-h}`, stroke: pick(cols), 'stroke-width': w, fill: 'none', 'stroke-linecap': 'round' }, g);
+      }
+    }
+  }
+  const back = $('#grassBack');
+  tufts(back, 80, 402, 458, 8, 18, ['#3f7a3c', '#6aa04d', '#9ccb68'], 2.2);
+  for (let i = 0; i < 46; i++) {
+    const x = R() * 800, y = 406 + R() * 50;
+    if (x > 110 && x < 190 && y > 380) continue;
+    const c = pick(['#fff1b5', '#f6b7a3', '#d5c4f5', '#ffffff']);
+    for (let k = 0; k < 5; k++) { const a = k * 1.2566; el('circle', { cx: x + Math.cos(a) * 3, cy: y + Math.sin(a) * 3, r: 2.4, fill: c }, back); }
+    el('circle', { cx: x, cy: y, r: 1.6, fill: '#e8a23c' }, back);
+  }
+
+  /* foreground frame: leaves overhead and tall grass below, drawn above the hero */
+  const fg = el('g', { class: 'deco' });
+  svg.insertBefore(fg, $('#flies'));
+  const leaves = el('g', { filter: 'url(#paint)', opacity: '.95' }, fg);
+  for (let i = 0; i < 18; i++) { const cx = R() * 170, cy = R() * 80; el('ellipse', { cx, cy, rx: 28 + R() * 34, ry: 9 + R() * 8, transform: `rotate(${20 + R() * 55} ${cx} ${cy})`, fill: pick(['#1d4a37', '#256046', '#2e7551']) }, leaves); }
+  for (let i = 0; i < 9; i++) { const cx = 690 + R() * 120, cy = R() * 60; el('ellipse', { cx, cy, rx: 24 + R() * 24, ry: 8 + R() * 6, transform: `rotate(${110 + R() * 50} ${cx} ${cy})`, fill: pick(['#1d4a37', '#256046', '#2e7551']) }, leaves); }
+  tufts(fg, 46, 590, 604, 34, 74, ['#1f4d2c', '#2c6a35', '#3f8a43'], 4);
+
+  const flies = $('#flies');
+  for (let i = 0; i < 26; i++) {
+    const c = el('circle', { class: 'ff', cx: 20 + R() * 760, cy: 240 + R() * 330, r: 6, fill: 'url(#ffGrad)' }, flies);
+    c.style.cssText = `--dx:${(R() - .5) * 60}px;--dy:${-20 - R() * 50}px;--d:${7 + R() * 8}s;--delay:${-R() * 10}s`;
+  }
+
+  /* ---------- content ---------- */
+  const SPOTS = [
+    { id: 'flower', stand: 190, title: 'The Lantern Bloom', text: 'Its petals hold the last of the daylight and give it back after dark. Even a small flower can light the way for anyone who stops to notice it.', notes: [523, 659, 784] },
+    { id: 'river', stand: 445, title: 'The Whispering River', text: 'This water began as rain on the hills and will end in the sea. Every living thing in the forest drinks from it, so keeping it clean protects them all.', notes: [587, 740, 880] },
+    { id: 'tree', stand: 580, title: 'The Old Keeper', text: 'Its roots have held this hillside together for hundreds of years. Great shelter takes a long time to grow, so we protect the things that are slow to return.', notes: [440, 587, 784] }
+  ];
+  SPOTS.forEach(s => s.node = document.querySelector(`.spot[data-id="${s.id}"]`));
+
+  /* ---------- settings (per-viewer convenience only) ---------- */
+  const settings = { sound: true, fireflies: true };
+  try { Object.assign(settings, JSON.parse(localStorage.getItem('lantern-hollow') || '{}')); } catch (e) {}
+  const save = () => { try { localStorage.setItem('lantern-hollow', JSON.stringify(settings)); } catch (e) {} };
+
+  /* ---------- sound ---------- */
+  let ac = null, master = null;
+  function ensureAudio() {
+    if (!settings.sound) return;
+    if (!ac) {
+      try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
+      master = ac.createGain(); master.connect(ac.destination);
+      const len = ac.sampleRate * 2, buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
+      let last = 0;
+      for (let i = 0; i < len; i++) { last = (last + .02 * (Math.random() * 2 - 1)) / 1.02; d[i] = last * 3.5; }
+      const src = ac.createBufferSource(); src.buffer = buf; src.loop = true;
+      const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 700;
+      const wg = ac.createGain(); wg.gain.value = .12;
+      const lfo = ac.createOscillator(), lg = ac.createGain(); lfo.frequency.value = .12; lg.gain.value = .05;
+      lfo.connect(lg); lg.connect(wg.gain); src.connect(lp); lp.connect(wg); wg.connect(master);
+      src.start(); lfo.start();
+    }
+    master.gain.value = 1;
+    if (ac.state === 'suspended') ac.resume().catch(() => {});
+  }
+  function muteIfOff() { if (master) master.gain.value = settings.sound ? 1 : 0; }
+  function chime(notes) {
+    if (!ac || !settings.sound) return;
+    const t0 = ac.currentTime;
+    notes.forEach((f, i) => {
+      const o = ac.createOscillator(), g = ac.createGain(), t = t0 + i * .15;
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.16, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + 1.5);
+      o.connect(g); g.connect(master); o.start(t); o.stop(t + 1.6);
+    });
+  }
+
+  /* ---------- state ---------- */
+  const ui = {
+    title: $('#titleScreen'), hud: $('#hud'), hint: $('#hint'), card: $('#card'), settings: $('#settings'), done: $('#done'),
+    pips: [...document.querySelectorAll('.pip')], pipText: $('#pipText'), explore: $('#btnExplore'), cont: $('#btnContinue')
+  };
+  let screen = 'title', explore = false, modal = false, x = 300, target = null, pending = null, dir = 1, walk = 0, openedFrom = 'title';
+  const found = new Set(), keys = {};
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+  function setHint() {
+    const left = 3 - found.size;
+    ui.hint.textContent = !explore
+      ? 'Walk with the arrow keys or tap the ground. Press Explore to sense what the forest is hiding.'
+      : `Tap a glowing spot, or walk onto it, to look closer. ${left} ${left === 1 ? 'secret' : 'secrets'} left.`;
+  }
+  function setExplore(on) {
+    explore = on;
+    stage.classList.toggle('explore', on);
+    ui.explore.setAttribute('aria-pressed', String(on));
+    SPOTS.forEach(s => s.node.setAttribute('tabindex', on && !found.has(s.id) ? '0' : '-1'));
+    setHint();
+  }
+  function updatePips() {
+    ui.pips.forEach((p, i) => p.classList.toggle('on', i < found.size));
+    ui.pipText.textContent = `${found.size} of 3`;
+  }
+  function start(withExplore) {
+    ensureAudio();
+    screen = 'play';
+    ui.title.hidden = true; ui.hud.hidden = false; ui.hint.hidden = false;
+    updatePips(); setExplore(withExplore);
+  }
+  function toTitle() {
+    screen = 'title'; modal = false; target = null; pending = null;
+    ui.title.hidden = false; ui.hud.hidden = true; ui.hint.hidden = true; ui.card.hidden = true; ui.done.hidden = true;
+  }
+  function reset() {
+    found.clear(); x = 300; dir = 1; target = null; pending = null;
+    SPOTS.forEach(s => s.node.classList.remove('found'));
+    updatePips();
+  }
+  function openSpot(s) {
+    modal = true; found.add(s.id); s.node.classList.add('found');
+    updatePips(); chime(s.notes);
+    $('#cardKicker').textContent = `Secret ${found.size} of 3`;
+    $('#cardTitle').textContent = s.title;
+    $('#cardText').textContent = s.text;
+    ui.cont.textContent = found.size === 3 ? 'Finish the adventure' : 'Continue';
+    ui.card.hidden = false; ui.hint.hidden = true;
+    ui.cont.focus({ preventScroll: true });
+  }
+  function closeCard() {
+    ui.card.hidden = true;
+    if (found.size === 3) {
+      ui.done.hidden = false; screen = 'done'; chime([523, 659, 784, 1047]);
+      $('#btnAgain').focus({ preventScroll: true });
+    } else {
+      modal = false; ui.hint.hidden = false; setExplore(explore);
+    }
+  }
+  function arrive() {
+    if (!pending) return;
+    const s = pending; pending = null;
+    if (!found.has(s.id)) openSpot(s);
+  }
+  function goTo(s) {
+    if (screen !== 'play' || modal || !explore || found.has(s.id)) return;
+    pending = s; target = s.stand;
+    if (Math.abs(x - s.stand) < 3) { target = null; arrive(); }
+  }
+  function openSettings() { openedFrom = screen; modal = true; $('#optSound').checked = settings.sound; $('#optFlies').checked = settings.fireflies; ui.settings.hidden = false; $('#optSound').focus({ preventScroll: true }); }
+  function closeSettings() { ui.settings.hidden = true; modal = screen === 'play' && !ui.card.hidden; }
+
+  /* ---------- events ---------- */
+  $('#btnPlay').onclick = () => { reset(); start(false); };
+  $('#btnExploreTitle').onclick = () => { reset(); start(true); };
+  $('#btnSettingsTitle').onclick = openSettings;
+  $('#btnSettings').onclick = openSettings;
+  $('#btnCloseSettings').onclick = closeSettings;
+  $('#btnMenu').onclick = toTitle;
+  ui.explore.onclick = () => setExplore(!explore);
+  ui.cont.onclick = closeCard;
+  $('#btnAgain').onclick = () => { ui.done.hidden = true; modal = false; reset(); start(false); };
+  $('#btnHome').onclick = () => { ui.done.hidden = true; reset(); toTitle(); };
+  $('#optSound').onchange = e => { settings.sound = e.target.checked; save(); if (settings.sound) ensureAudio(); muteIfOff(); };
+  $('#optFlies').onchange = e => { settings.fireflies = e.target.checked; save(); applyFlies(); };
+  function applyFlies() { flies.style.display = settings.fireflies ? '' : 'none'; }
+  applyFlies();
+
+  svg.addEventListener('click', e => {
+    if (screen !== 'play' || modal) return;
+    const r = svg.getBoundingClientRect();
+    target = clamp((e.clientX - r.left) / r.width * 800, 60, 740); pending = null;
+  });
+  SPOTS.forEach(s => {
+    s.node.addEventListener('click', e => { e.stopPropagation(); goTo(s); });
+    s.node.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goTo(s); } });
+  });
+  addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !ui.settings.hidden) { closeSettings(); return; }
+    if (screen !== 'play' || modal) return;
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { keys.l = true; e.preventDefault(); }
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { keys.r = true; e.preventDefault(); }
+  });
+  addEventListener('keyup', e => {
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.l = false;
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.r = false;
+  });
+
+  /* ---------- the wanderer ---------- */
+  const hero = $('#hero'), legL = $('#legL'), legR = $('#legR'), lamp = $('#lanternGlow');
+  const rise = px => { const d = (px - 445) / 79; return Math.abs(d) < 1 ? 20 * (1 - d * d) : 0; };
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    let v = 0;
+    if (screen === 'play' && !modal) {
+      if (keys.l) v -= 1;
+      if (keys.r) v += 1;
+      if (v) { target = null; pending = null; }
+      else if (target !== null) {
+        const d = target - x;
+        if (Math.abs(d) < 3) { x = target; target = null; arrive(); } else v = Math.sign(d);
+      }
+      x = clamp(x + v * 150 * dt, 60, 740);
+      if (v && explore) {
+        for (const s of SPOTS) if (!found.has(s.id) && Math.abs(x - s.stand) < 5) { openSpot(s); break; }
+      }
+    }
+    if (v) { dir = v; walk += dt * 11; } else walk *= .9;
+    const a = Math.sin(walk) * 28, bob = v ? -Math.abs(Math.sin(walk)) * 2.5 : Math.sin(now / 700) * .8;
+    hero.setAttribute('transform', `translate(${x.toFixed(1)} ${(502 - rise(x) + bob).toFixed(1)}) scale(${dir} 1)`);
+    legL.setAttribute('transform', `rotate(${a.toFixed(1)})`);
+    legR.setAttribute('transform', `rotate(${(-a).toFixed(1)})`);
+    lamp.setAttribute('r', (31 + Math.sin(now / 260) * 1.6 + Math.sin(now / 97) * .8).toFixed(1));
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+
+</body></html>
